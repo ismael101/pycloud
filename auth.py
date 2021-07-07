@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_marshmallow import Marshmallow 
+import datetime
 from sqlalchemy.exc import IntegrityError
 from models import session, User
 from functools import wraps
@@ -17,9 +17,12 @@ def signup():
         password = request.json['password']
         hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
         new_user = User(username=username, password=hashed_password.decode('utf-8'))
-        os.makedirs(f'files/{new_user.username}')
         session.add(new_user)
         session.commit()
+        os.makedirs(f'static/{new_user.username}')
+        os.makedirs(f'static/{new_user.username}/docs')
+        os.makedirs(f'static/{new_user.username}/images')
+        os.makedirs(f'static/{new_user.username}/videos')
         return jsonify('user succesfully created'), 201
     except IntegrityError:
         session.rollback()
@@ -33,7 +36,7 @@ def login():
         password = request.json['password']
         hashed_password = user.password
         if bcrypt.checkpw(password.encode('utf-8'), hashed_password.encode('utf-8')):
-            token = jwt.encode({'id': f'{user.id}'}, os.environ['SECRET'], algorithm='HS256')
+            token = jwt.encode({'id': f'{user.id}',"exp": datetime.datetime.utcnow() + datetime.timedelta(hours=2)}, os.environ['SECRET'], algorithm='HS256')
             return jsonify({'token':token}), 201
         else:
             return jsonify({'error':'password incorrect'}), 401

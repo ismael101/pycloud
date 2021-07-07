@@ -21,11 +21,12 @@ class User(Base):
 
 class File(Base):
     __tablename__ = 'file'
-    id = Column(String(50), primary_key=True)
+    id = Column(String(50), primary_key=True, default=uuid.uuid4)
     name = Column(String(50))
     size = Column(Integer)
     type = Column(String(50))
-    user_id = Column(UUID, ForeignKey('user.id'), nullable=False)
+    location = Column(Text())
+    user_id = Column(UUID(as_uuid=True), ForeignKey('user.id'), nullable=False)
 
 Base.metadata.create_all(engine)
 
